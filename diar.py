@@ -1,27 +1,26 @@
 import click
+import numpy as np
+from pathlib import Path
+import os
 
+
+def input_diar(abs_root):
+    return np.load(abs_root + 'diarpy/file.npy')
 
 @click.command()
-@click.option('--encrypt', default=False,
-              help='Encrypt the text? Currently no effect')
-@click.argument('date', required=False, nargs=2)
-@click.argument('text', required=False, nargs=-1)
-def dry(text, encrypt):
-    text = " ".join(text)
-    check = False
-    click.echo('cccc')
-    if text == '':
-        text = click.prompt('New entry for date: ', date)
-        text, check = check(text)
-    while not check:
-        check = True
-
-
-def check_valid(text):
-    if ':' in text:
-        return True
-
-
+@click.argument('text', required=True, nargs=-1)
+def diar(text):
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_path = dir_path + '/file.npy'
+    print(os.listdir())
+    print(dir_path)
+    print(file_path)
+    exist = os.path.exists(file_path)
+    if exist:
+        print('amen')
+    else:
+        click.echo('Your diary will be stored in:' + file_path)
+        np.save(file_path, np.zeros((10, 10)))
 
 if __name__ == '__main__':
-    dry()
+    diar()
