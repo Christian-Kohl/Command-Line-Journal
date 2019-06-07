@@ -11,13 +11,11 @@ def input_diar(abs_root):
 @click.argument('text', required=True, nargs=-1)
 def diar(text):
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = dir_path + '/file.npy'
+    file_path = dir_path + '/diarpy.npy'
     print(os.listdir())
-    print(dir_path)
-    print(file_path)
     exist = os.path.exists(file_path)
     if exist:
-        print('amen')
+        dary = np.load('diarpy.npy')
     else:
         click.echo('Your diary will be stored in:' + file_path)
         np.save(file_path, np.zeros((10, 10)))
