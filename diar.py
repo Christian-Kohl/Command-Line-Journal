@@ -6,6 +6,8 @@ import sqlite3
 import datetime
 import dateparser as db
 import sys
+import pandas as pd
+
 
 # Setup the name for the database
 diarname = 'diarpy.db'
@@ -51,19 +53,18 @@ def add_entry(c, text):
 # Manages the command line interface
 @click.command()
 @click.option('--get', default=False)
-@click.argument('text', required=True, nargs=-1)
+@click.argument('text', required=False, nargs=-1)
 def diar(get, text):
     # Sets up the filename strings
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = dir_path + '/' + diarname
+    conn, cur = connect_db()
     # Manages the option to retrieve or to add to the database
     if get:
-        conn, cur = connect_db()
-        x = cur.execute('SELECT * FROM entry')
+        print(pd.read_sql_query("SELECT * FROM entry", conn))
     else:
         # Check if the file exists
         exist = os.path.exists(file_path)
-        conn, cur = connect_db()
         if exist:
             add_entry(cur, text)
         else:
