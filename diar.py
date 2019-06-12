@@ -52,16 +52,26 @@ def add_entry(c, text):
 
 # Manages the command line interface
 @click.command()
-@click.option('--get', default=False)
+@click.option('--getAll', default=False)
+@click.option('--date', default=False)
+@click.option('--title', default=False)
 @click.argument('text', required=False, nargs=-1)
-def diar(get, text):
+def diar(getAll, date, title, text):
     # Sets up the filename strings
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = dir_path + '/' + diarname
     conn, cur = connect_db()
     # Manages the option to retrieve or to add to the database
-    if get:
-        print(pd.read_sql_query("SELECT * FROM entry", conn))
+    if getAll:
+        print(pd.read_sql_query("SELECT * FROM entry ORDER BY Date", conn))
+    elif date and title:
+        print(pd.read_sql_query("SELECT * FROM entry WHERE title=(?) AND Date=(?)",
+                                (title, date),
+                                conn))
+    elif date:
+        print(pd.read_sql_query("SELECT * FROM entry WHERE Date=(?)", (date)), conn)
+    elif title:
+        print(pd.read_sql_query("SELECT * FROM entry WHERE title=(?)", (title)), conn)
     else:
         # Check if the file exists
         exist = os.path.exists(file_path)
