@@ -30,6 +30,8 @@ def setup_db(c):
               )''')
 
 # Function to add an entry to the database
+
+
 def add_entry(c, text):
     # Changes the arguments to a string, separated by spaces
     text = ' '.join(text)
@@ -37,7 +39,7 @@ def add_entry(c, text):
     if ':' in text:
         # Splits the header from the diary entry
         header = text.split(':')[0]
-        text = text[len(header)+1:]
+        text = text[len(header) + 1:]
         if text[0] == ' ':
             text = text[1:]
         # Extracts the date and title from the header
@@ -50,46 +52,14 @@ def add_entry(c, text):
     c.execute("INSERT INTO entry (date, title, entry) VALUES (?, ?, ?)",
               (date.replace(microsecond=0, second=0, minute=0), title, text, ))
 
-# Manages the command line interface
-@click.command()
-@click.option('--getAll', default=False)
-@click.option('--date', default=False)
-@click.option('--title', default=False)
-@click.argument('text', required=False, nargs=-1)
-def diar(getAll, date, title, text):
-    # Sets up the filename strings
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = dir_path + '/' + diarname
-    conn, cur = connect_db()
-    # Manages the option to retrieve or to add to the database
-    if getAll:
-        print(pd.read_sql_query("SELECT * FROM entry ORDER BY Date", conn))
-    elif date and title:
-        print(pd.read_sql_query("SELECT * FROM entry WHERE title=(?) AND Date=(?)",
-                                (title, date),
-                                conn))
-    elif date:
-        print(pd.read_sql_query("SELECT * FROM entry WHERE Date=(?)", (date)), conn)
-    elif title:
-        print(pd.read_sql_query("SELECT * FROM entry WHERE title=(?)", (title)), conn)
-    else:
-        # Check if the file exists
-        exist = os.path.exists(file_path)
-        if exist:
-            add_entry(cur, text)
-        else:
-            # Creates a new database to store entries in
-            click.echo('Your diary will be stored in:' + file_path)
-            setup_db(cur)
-            add_entry(cur, text)
-    conn.commit()
-    conn.close()
 
 # Function to extract the title and date from a header
+
+
 def extract_header(header):
     # Splits header into date, and title section separated by ','
     sections = header.split(', ')
-    #Checks the number of sections
+    # Checks the number of sections
     if len(sections) > 2:
         # Gives the user information before exiting
         click.echo("Sorry, you can't have commas in your title, please try again")
@@ -111,6 +81,36 @@ def extract_header(header):
             date = db.parse(sections[0])
             title = sections[1]
     return date, title
+
+
+# Manages the command line interface
+@click.command()
+@click.option('--getall', '-g', required=False, is_flag=True)
+@click.option('--clean', '-c', required=False, is_flag=True)
+@click.argument('text', required=False, nargs=-1)
+def diar(clean, getall, text):
+    # Sets up the filename strings
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_path = dir_path + '/' + diarname
+    conn, cur = connect_db()
+    # Manages the option to retrieve or to add to the database
+    if clean:
+        pd.read_sql_query(
+            "DELETE FROM entry WHERE (entry IS NULL or entry == '')", conn)
+    elif getall:
+        print(pd.read_sql_query("SELECT * FROM entry ORDER BY Date", conn))
+    else:
+        # Check if the file exists
+        exist = os.path.exists(file_path)
+        if exist:
+            add_entry(cur, text)
+        else:
+            # Creates a new database to store entries in
+            click.echo('Your diary will be stored in:' + file_path)
+            setup_db(cur)
+            add_entry(cur, text)
+    conn.commit()
+    conn.close()
 
 
 if __name__ == '__main__':
