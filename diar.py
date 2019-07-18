@@ -7,7 +7,9 @@ import datetime
 import dateparser as db
 import sys
 import pandas as pd
-
+from pprint import pprint
+from pandas import read_sql
+from datetime import timedelta
 
 # Setup the name for the database
 diarname = 'diarpy.db'
@@ -87,8 +89,11 @@ def extract_header(header):
 @click.command()
 @click.option('--getall', '-g', required=False, is_flag=True)
 @click.option('--clean', '-c', required=False, is_flag=True)
+@click.option('--title', '-t', required=False)
+@click.option('--date', '-d', required=False)
+@click.option('--recent', '-r', required=False, is_flag=True)
 @click.argument('text', required=False, nargs=-1)
-def diar(clean, getall, text):
+def diar(clean, getall, text, title, recent, date):
     # Sets up the filename strings
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = dir_path + '/' + diarname
@@ -99,6 +104,19 @@ def diar(clean, getall, text):
             "DELETE FROM entry WHERE (entry IS NULL or entry == '')", conn)
     elif getall:
         print(pd.read_sql_query("SELECT * FROM entry ORDER BY Date", conn))
+    elif recent:
+        print(pd.read_sql_query("SELECT * FROM entry ORDER BY Date LIMIT 5", conn))
+    elif title:
+        query = "SELECT * FROM entry WHERE Title=\"{}\" ORDER BY Date".format(
+            title)
+        df = read_sql(query, conn)
+        print(df)
+    elif date:
+        date = db.parse(date)
+        query = "SELECT * FROM entry WHERE Date >\"{}\" AND Date < \"{}\" ORDER BY Date".format(
+            date, date + timedelta(days=1))
+        df = read_sql(query, conn)
+        print(df)
     else:
         # Check if the file exists
         exist = os.path.exists(file_path)
